@@ -1,4 +1,3 @@
-"""Implementation of gSpan."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -18,22 +17,94 @@ from optimization import dichotomous_search
 import pandas as pd
 import numpy as np
 
-def eliminate_incorrect_pattern(undir_freq_subs):
+def eliminate_incorrect_pattern(undir_freq_subs, min_support):
 	del_idx = []
-	for idx, ufs in enumerate(progressbar.progressbar(undir_freq_subs)):
+	for idx1, ufs in enumerate(progressbar.progressbar(undir_freq_subs)):
 		def_edge_num = len(ufs.definition.edges)
 		def_vertex_num = len(ufs.definition.vertices)
-		tmp = ufs.instances[0]
-		ien, ivn = 0, set()
-		while tmp:
-			ivn.add(tmp.edge.frm)
-			ivn.add(tmp.edge.to)
-			ien += 1
-			tmp = tmp.prev
-		ivn = len(ivn)
-		if ien != def_edge_num or ivn != def_vertex_num:
-			del_idx.append(idx)
+		del_ins = []
+		for idx2, tmp in enumerate(ufs.instances):
+			ien, ivn = 0, set()
+			while tmp:
+				ivn.add(tmp.edge.frm)
+				ivn.add(tmp.edge.to)
+				ien += 1
+				tmp = tmp.prev
+			ivn = len(ivn)
+			if ien != def_edge_num or ivn != def_vertex_num:
+				del_ins.append(idx2)
+		ufs.instances = list(np.delete(ufs.instances, del_ins))
+		if len(ufs.instances) < min_support:
+			del_idx.append(idx1)
 	return np.delete(undir_freq_subs, del_idx)
+
+def self_loop_detect(freq_subs, graphs, min_support):
+	freq_subs_tmp = []
+	xx = -1
+	for fs in progressbar.progressbar(freq_subs):
+		xx += 1
+		ori_sl = []
+		for e in fs.definition.edges.values():
+			if e.frm == e.to:
+				ori_sl.append(e.frm)
+		c = np.zeros(len(fs.definition.vertices))
+		for ins in fs.instances:
+			if graphs[ins.gid].find_edge_directed(ins.edge.frm, ins.edge.frm) and ins.edge.frm not in ori_sl:
+				c[0] += 1
+			appeared = [ins.edge.frm]
+			while ins:
+				if ins.edge.to not in appeared:
+					if graphs[ins.gid].find_edge_directed(ins.edge.to, ins.edge.to) and ins.edge.to not in ori_sl:
+						c[len(appeared)] += 1
+					appeared.append(ins.edge.to)
+					# num += 1
+				ins = ins.prev
+		c = [idx for idx, cc in enumerate(c) if cc >= min_support and idx not in ori_sl]
+		if len(c) == 0:
+			continue
+		for i in range(1, len(c) + 1):
+			for j in set(itertools.combinations(c, i)):
+				tmp = copy.deepcopy(fs)
+				del_idx = []
+				for di, ins in enumerate(tmp.instances):
+					pdfs_tmp = []
+					if 0 in j:
+						eid = graphs[ins.gid].find_edge_id(ins.edge.frm, ins.edge.frm)
+						if eid != -1:
+							pdfs_tmp.append((ins.gid, graphs[ins.gid].edges[eid]))
+						else:
+							del_idx.append(di)
+					num = 1
+					prev_ins = ins
+					while ins:
+						if num in j:
+							eid = graphs[ins.gid].find_edge_id(ins.edge.to, ins.edge.to)
+							if eid != -1:
+								pdfs_tmp.append((ins.gid, graphs[ins.gid].edges[eid]))
+							else:
+								del_idx.append(di)
+						num += 1
+						prev_ins = ins
+						ins = ins.prev
+
+					if di not in del_idx:
+						ins = prev_ins
+						for p1, p2 in pdfs_tmp:
+							ins.prev = PDFS(p1, p2, None)
+							ins = ins.prev
+				tmp.instances = np.delete(np.array(tmp.instances), np.array(del_idx))
+
+				if len(tmp.instances) >= min_support:
+					add = []
+					for idx, e in enumerate(tmp.definition.edges.values()):
+						if idx == 0 and 0 in j:
+							add.append(e.frm)
+						if idx + 1 in j:
+							add.append(e.to)
+					for a in add[::-1]:
+						tmp.definition.add_edge(AUTO_EDGE_ID, a, a, 1, -1)
+					freq_subs_tmp.append(tmp)
+	return list(np.concatenate([freq_subs, freq_subs_tmp], axis=0))
 
 def find_directed_frequent_subgraphs(undir_freq_subs, min_support):
 	dir_freq_subs = []
@@ -97,7 +168,6 @@ class DFSedge(object):
 		return '(frm={}, to={}, vevlb={})'.format(
 			self.frm, self.to, self.vevlb
 		)
-
 
 class DFScode(list):
 	"""DFScode is a list of DFSedge."""
@@ -230,8 +300,12 @@ class Substructure():
 	def __init__(self, definition, instances):
 		self.definition = definition
 		self.instances = instances
-		self.gid_set = set(i.gid for i in self.instances)
 		self.score = 0
+
+	def update_gdict(self):
+		self.gdict = collections.defaultdict(list)
+		for i in self.instances:
+			self.gdict[i.gid].append(i)
 
 	def filter_duplicate(self, graphs):
 		g_his = {}
@@ -262,11 +336,7 @@ class Substructure():
 		return len(set(i.gid for i in self.instances))
 
 	def find_instances(self, gid):
-		ins_arr = []
-		for i in self.instances:
-			if i.gid == gid:
-				ins_arr.append(i)
-		return ins_arr
+		return self.gdict[gid]
 
 	def update_edge_weight(self, graphs, method='dsearch'):
 		edge_weight_sum = [[] for _ in range(len(self.definition.edges))]
@@ -280,18 +350,17 @@ class Substructure():
 				edge_weight_sum[num].append(graphs[ins.gid].edges[eid].weight)
 				num += 1
 				ins = ins.prev
-		edge_weight = []
+		self.edge_weight = []
 		for idx, i in enumerate(edge_weight_sum):
 			if method == 'dsearch':
 				self.definition.edges[idx].weight = dichotomous_search(i)[0]
 			elif method == 'minimum':
 				self.definition.edges[idx].weight = min(i)
 			elif method == 'median':
-				self.definition.edges[idx].weight = median(i)
+				self.definition.edges[idx].weight = np.median(i)
 			elif method == 'mode':
 				self.definition.edges[idx].weight = max(set(i), key=i.count)
-			edge_weight.append(self.definition.edges[idx].weight)
-		self.edge_weight = edge_weight[::-1]
+			self.edge_weight.append(self.definition.edges[idx].weight)
 
 class gSpan(object):
 	"""`gSpan` algorithm."""
@@ -328,53 +397,19 @@ class gSpan(object):
 			self._max_num_vertices = self._min_num_vertices
 		self._report_df = pd.DataFrame()
 
-	def _generate_1edge_frequent_subgraphs(self):
-		vlb_counter = collections.Counter()
-		vevlb_counter = collections.Counter()
-		vlb_counted = set()
-		vevlb_counted = set()
-		for g in self.graphs.values():
-			for v in g.vertices.values():
-				if (g.gid, v.vlb) not in vlb_counted:
-					vlb_counter[v.vlb] += 1
-				vlb_counted.add((g.gid, v.vlb))
-				for to, e in v.edges.items():
-					vlb1, vlb2 = v.vlb, g.vertices[to].vlb
-					if vlb1 > vlb2:
-						vlb1, vlb2 = vlb2, vlb1
-					if (g.gid, (vlb1, vlb2)) not in vevlb_counter:
-						vevlb_counter[(vlb1, e.elb, vlb2)] += 1
-					vevlb_counted.add((g.gid, (vlb1, e.elb, vlb2)))
-		# print(vlb_counter)
-		# add frequent vertices.
-		for vlb, cnt in vlb_counter.items():
-			if cnt >= self._min_support:
-				g = Graph(gid=next(self._counter))
-				self._frequent_size1_subgraphs.append(g)
-				if self._min_num_vertices <= 1:
-					self._report_size1(g, support=cnt)
-			else:
-				continue
-		if self._min_num_vertices > 1:
-			self._counter = itertools.count()
-
 	def run(self):
 		"""Run the gSpan algorithm."""
-		# self._generate_1edge_frequent_subgraphs()
 		if self._max_num_vertices < 2:
 			return
 		root = collections.defaultdict(Projected)
 		for gid, g in self.graphs.items():
-			# g.display()
 			g.undirected()
 			for vid, v in g.vertices.items():
 				edges = self._get_forward_root_edges(g, vid)
-				# v.display()
 				for e in edges:
 					root[(v.vlb, e.elb, g.vertices[e.to].vlb)].append(
 						PDFS(gid, e, None)
 					)
-				# print('\n')
 		for vevlb, projected in progressbar.progressbar(root.items()):
 			self._DFScode.append(DFSedge(0, 1, vevlb))
 			self._subgraph_mining(projected)
@@ -529,18 +564,8 @@ class gSpan(object):
 		return res
 
 	def _subgraph_mining(self, projected):
-		# print('--------------------------')
-		# for ins in projected:
-		#     print('Gid: ', ins.gid)
-		#     while ins:
-		#         ins.edge.display()
-		#         ins = ins.prev
-		#     print('')
-		# projected = filter_duplicate(projected, self.graphs)
 		self._support = self._get_support(projected)
 		if self._support < self._min_support:
-			return
-		if not self._is_min():
 			return
 		if self._DFScode.get_num_vertices() >= self._min_num_vertices:
 			self._frequent_subgraphs.append(Substructure(copy.deepcopy(self._DFScode).to_graph(), projected))

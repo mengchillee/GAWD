@@ -1,4 +1,3 @@
-"""Definitions of Edge, Vertex and Graph."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -12,6 +11,7 @@ import networkx as nx
 from networkx.algorithms.approximation import independent_set
 import numpy as np
 import progressbar
+import time
 
 VACANT_EDGE_ID = -1
 VACANT_VERTEX_ID = -1
@@ -72,8 +72,7 @@ def instance_filter_mis(dir_freq_subs, min_support):
 				for in_key2, in_val2 in ins_node_dict.items():
 					if in_key1 != in_key2 and len(in_val1.intersection(in_val2)) > 0:
 						NG.add_edge(in_key1, in_key2)
-			mis = set(list(nx.find_cliques(nx.complement(NG)))[0])
-			# mis = independent_set.maximum_independent_set(NG)
+			mis = independent_set.maximum_independent_set(NG)
 			del_idx = list(set(ins_idx).difference(mis))
 			dir_freq_subs[dfs_idx].instances = np.delete(dir_freq_subs[dfs_idx].instances, del_idx, 0)
 		if len(dir_freq_subs[dfs_idx].instances) < min_support:
@@ -177,7 +176,8 @@ class Graph(object):
 		for ins_edges in ins_edges_arr:
 			for ie, iew in zip(ins_edges, edge_weight):
 				diff = self.edges[ie].weight - iew
-				mbits += 2 * log2(abs(diff)) + 3 if diff != 0 else 1
+				xxx = 2 * log2(abs(diff)) + 3 if diff != 0 else 1
+				mbits += xxx
 		return mbits
 
 	def generate_new_edges(self, ins_vertices, ins_edges):
@@ -230,7 +230,7 @@ class Graph(object):
 		wbits = self.calculate_rewiring(new_edges, len(ins_vertices[0]))
 
 		### Check whether the graph is totally compressed
-		if len(self.edges) - len(ins_edges.reshape(-1)) != 0:
+		if len(new_edges) != 0:
 			b, s = 0, 0
 			for to in ver_cnt.values():
 				s += log2(comb(v_num, len(set(to))))
@@ -257,11 +257,10 @@ class Graph(object):
 				b = sn
 		rbits = logstar(b) + v_num * log2(b + 1) + s
 
-		m = self.calculate_max_edge()
-		if m != 0:
+		ebits = 0
+		if len(self.edges.values()) != 0:
+			m = max([e.weight for e in self.edges.values()])
 			ebits = logstar(m) + len(self.edges) * log2(m)
-		else:
-			ebits = 0
 
 		return ceil(vbits) + ceil(rbits) + ceil(ebits)
 
@@ -276,7 +275,7 @@ class Graph(object):
 			ins_vertex, ins_edge = find_instance_info(tmp, self.edges)
 			ins_vertex, ins_edge = ins_vertex[0], ins_edge[0]
 
-			### prevent from compress again on the same vertex
+			### Prevent from compressing again on the same vertex
 			if len(ins_edge) != def_edge_num or len(ins_vertex) != def_vertex_num:
 				continue
 
@@ -323,7 +322,6 @@ class Graph(object):
 			for vk, vv in self.vertices.items():
 				del_tmp = []
 				for ek, ev in vv.edges.items():
-					# if j in ins_vertex and i not in ins_vertex:
 					if ev.to in ins_vertex:
 						del_tmp.append(ev.to)
 				for j in del_tmp:
@@ -363,17 +361,6 @@ class Graph(object):
 			eid = next(self.counter)
 		self.vertices[frm].add_edge(eid, frm, to, elb, weight, directed='1')
 		self.edges[eid] = Edge(eid, frm, to, elb, weight, directed='1')
-
-		# if self.find_edge_id(to, frm) == -1:
-		#     if self.eid_auto_increment:
-		#         eid = next(self.counter)
-		#     self.vertices[to].add_edge(eid, to, frm, elb, weight, directed='0')
-		#     self.edges[eid] = Edge(eid, to, frm, elb, weight, directed='0')
-		# else:
-		#     self.vertices[frm].edges[to].directed = '2'
-		#     self.edges[eid-1].directed = '2'
-		#     self.vertices[to].edges[frm].directed = '2'
-		#     self.edges[eid].directed = '2'
 		return self
 
 	def undirected(self):
