@@ -1,7 +1,7 @@
-# -*- coding=utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+####################################
+# Author: Jeremy (Meng-Chieh) Lee  #
+# Date	: 2020/05/02               #
+####################################
 
 import os
 import sys
