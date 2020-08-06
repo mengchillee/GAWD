@@ -1,3 +1,8 @@
+####################################
+# Author: Jeremy (Meng-Chieh) Lee  #
+# Date	: 2020/05/04               #
+####################################
+
 import codecs
 import os
 from graphviz import Digraph
