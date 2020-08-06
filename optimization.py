@@ -1,3 +1,8 @@
+####################################
+# Author: Jeremy (Meng-Chieh) Lee  #
+# Date	: 2020/05/02               #
+####################################
+
 from collections import OrderedDict, Counter
 import math
 
