@@ -1,5 +1,9 @@
 # GRANDDIWE: GRaph ANomaly Detection in DIrected WEighted Graph Databases
 
+------------
+
+Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GRANDDIWE: GRaph ANomaly Detection in DIrected WEighted Graph Databases. **Under submission at *IEEE International Conference on Big Data (IEEE BigData)***, 2020.
+
 ## Introduction
 We propose GRANDDIWE, for detecting anomalous graphs in directed weighted graph databases. The idea is to
 1. iteratively identify the ``best'' substructure (i.e., subgraph or motif) that yields the largest compression when each of its occurrences is replaced by a super-node, and 
