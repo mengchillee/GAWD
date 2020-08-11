@@ -4,6 +4,7 @@
 We propose GRANDDIWE, for detecting anomalous graphs in directed weighted graph databases. The idea is to
 1. iteratively identify the ``best'' substructure (i.e., subgraph or motif) that yields the largest compression when each of its occurrences is replaced by a super-node, and 
 2. score each graph by how much it compresses over iterations---the more the compression, the lower the anomaly score.
+
 Our lossless substructure discovery method is designed to handle weighted graphs based on an information-theoretic algorithm called Subdue.
 Each graph in the database is then scored by how much it compresses over iterations --- the graphs containing fewer high-score substructures should be more anomalous. 
 Different from existing work on which we build, GRANDDIWE exhibits
