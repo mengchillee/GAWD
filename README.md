@@ -7,6 +7,7 @@ We propose GRANDDIWE, for detecting anomalous graphs in directed weighted graph 
 
 Our lossless substructure discovery method is designed to handle weighted graphs based on an information-theoretic algorithm called Subdue.
 Each graph in the database is then scored by how much it compresses over iterations --- the graphs containing fewer high-score substructures should be more anomalous. 
+
 Different from existing work on which we build, GRANDDIWE exhibits
 - a *lossless* graph encoding scheme, 
 - ability to handle numeric edge weights, and
