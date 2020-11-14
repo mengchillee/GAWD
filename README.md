@@ -2,7 +2,7 @@
 
 ------------
 
-Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GRANDDIWE: GRaph ANomaly Detection in DIrected WEighted Graph Databases. **Under submission at *IEEE International Conference on Big Data (IEEE BigData)***, 2020.
+Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GRANDDIWE: GRaph ANomaly Detection in DIrected WEighted Graph Databases. **Under submission at *25th Pacific-Asia Conference on Knowledge Discovery and Data Mining (PAKDD)***, 2020.
 
 ## Introduction
 We propose GRANDDIWE, for detecting anomalous graphs in directed weighted graph databases. The idea is to
