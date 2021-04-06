@@ -24,3 +24,11 @@ The experiment code is writen in Python 3 and built on a number of Python packag
 - numpy==1.13.1
 - pandas==0.21.0
 - progressbar2==3.51.4
+
+
+## Acknowledgement
+One part of our code is based on gSpan, downloaded from https://github.com/betterenvi/gSpan.
+
+This implementation is according to the following paper:
+
+Yan, X., & Han, J. (2002, December). gspan: Graph-based substructure pattern mining. In 2002 IEEE International Conference on Data Mining, 2002. Proceedings. (pp. 721-724). IEEE.
