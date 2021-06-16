@@ -97,7 +97,7 @@ def main(FLAGS=None):
 			print(colored('Finished in %f Seconds!\n' % (end3 - start3), 'green'))
 			if max_score_idx == -1:
 				min_s = int(min_s * 0.9)
-				if min_s <= 5:
+				if min_s <= 30:
 					ttime = (end1 - start1) + (end2 - start2) + (end3 - start3)
 					tttime += ttime
 					print(colored('No More Pattern is Found!', 'green'))
