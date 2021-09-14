@@ -2,7 +2,7 @@
 
 ------------
 
-Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GAWD: Graph Anomaly Detection in Directed Weighted Graph Databases. **Under submission at *The 2021 IEEE/ACM International Conference on Advances in Social Netowkrx Analysis and Mining (ASONAM 2021)***.
+Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GAWD: Graph Anomaly Detection in Directed Weighted Graph Databases. ***The 2021 IEEE/ACM International Conference on Advances in Social Netowkrx Analysis and Mining (ASONAM 2021)***.
 
 ## Introduction
 We propose GAWD, for detecting anomalous graphs in directed weighted graph databases. The idea is to
