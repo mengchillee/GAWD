@@ -1,6 +1,6 @@
 ####################################
 # Author: Jeremy (Meng-Chieh) Lee  #
-# Date	: 2020/05/02               #
+# Email	: mengchil@cs.cmu.edu      #
 ####################################
 
 import pickle
