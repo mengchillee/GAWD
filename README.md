@@ -4,6 +4,8 @@
 
 Lee, MC., Nguyen, H., Berberidis, D., Tseng, V.S., Akoglu, L., GAWD: Graph Anomaly Detection in Directed Weighted Graph Databases. *IEEE/ACM International Conference on Advances in Social Netowkrx Analysis and Mining (ASONAM)*, 2021.
 
+https://dl.acm.org/doi/abs/10.1145/3487351.3488325
+
 Please cite the paper as:
 
     @inproceedings{lee2021GAWD,
